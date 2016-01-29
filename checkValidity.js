@@ -1,4 +1,5 @@
 /* 目前只支持text/password/url/email/number */
+
 /* checkOpt
 {
     errorMsgClass: "error",
@@ -12,6 +13,7 @@
     },
     disableBrowserMsg: false
 */
+
 var Form = function(form, checkOpt, submitCallback){
     this.addCheckValidity();
     this.form = form;
@@ -120,11 +122,13 @@ Form.prototype.addErrorMsg = function(input, msg){
     var $input = $(input);
     var errorMsgClass = this.checkOpt.errorMsgClass;
     $input.addClass("invalid");
-    var width = $input.width()/2 + parseInt($input.css("padding-left"));
+    /* 由于Zepto获取取的width包含padding值 这里使用dom的api得到style*/
+    var inputStyle = input.currentStyle ? input.currentStyle : document.defaultView.getComputedStyle(input, null);
+    var width = parseInt(inputStyle['width'])/2 + parseInt(inputStyle["padding-left"]);
     var style = "max-width:" + width*1.3 + "px;";
     var position = $input.position();
     style += "left:" + (width*0.67 + position.left - 10) + "px;";
-    var marginTop = parseInt($input.css("margin-top"));
+    var marginTop = parseInt(inputStyle["margin-top"]);
     marginTop = marginTop ? marginTop : 0;
     style += "top:" + (position.top + 10 + $input.height() + marginTop) + "px";
     var errMsg = "<p class='" + errorMsgClass + "' style='" + style + "'><span style='max-width:" + (width*1.3 - 25) + "px;'>" + msg + "</span></p>";
