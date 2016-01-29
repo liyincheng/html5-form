@@ -1,5 +1,4 @@
-/* 如果浏览器不支持checkValidity则添加这个js, 目前只支持url/email/number */
-
+/* 目前只支持text/password/url/email/number */
 /* checkOpt
 {
     errorMsgClass: "error",
