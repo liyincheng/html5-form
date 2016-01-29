@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+    body, form, p{
+        margin: 0;
+        padding: 0;
+    }
+
+    .touch input,
+    .touch textarea{
+        color: #282828;
+        font-size: 16px;
+        margin-top: 25px;
+        height: 40px;
+        width: 240px;
+        padding: 0 20px;
+        border: 1px solid #cccccc;
+        box-shadow: 0 0 1px 0 #cccccc inset;
+        -webkit-appearance: none;
+    }
+
+    .touch input:first-child{
+        margin-top: 0;
+    }
+
+    .touch textarea{
+        padding: 10px 20px;
+        height: 70px;
+        margin-top: 25px;
+    }
+
+    input:focus,
+    textarea:focus
+    {
+        border: 1px solid #38cb7b !important;
+        box-shadow: 0 1px 2px #38cb7b;
+        outline: none;
+    }
+
+    .touch{
+        border: 1px solid #e6e6e6;
+        background-color: #f8f8f8;
+        padding: 30px;
+        margin: 0 atuo;
+        width: 280px;
+    }
+    .touch ::-webkit-input-placeholder{
+        color: #ccc;
+        font-size: 13px;
+    }
+    
+    .touch ::-moz-placeholder{
+        color: #ccc;
+        font-size: 13px;
+    
+    }
+    .touch :-ms-input-placeholder{
+        color: #ccc;
+        font-size: 13px;
+    }
+    
+    .touch input[type=submit]{
+        color: white;
+        background-color: #41ca7e;
+        height: 40px;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        width: 280px;
+    }
+    .touch input.invalid{
+        border: 1px solid #f47575;
+    }
+    .error{
+        position: absolute;
+        border: 1px solid #f0f0f0;
+        border-radius: 5px;
+        padding: 15px 10px;
+        background-color: white;
+        font-size: 14px;
+        color: #282828;
+        box-shadow: 0 0 20px #282828;
+    }
+    
+    .error:after{
+        content: "";
+        position: absolute;
+        top: -8px;
+        left: 10px;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 8px solid white;
+    }
+    
+    .error:before{
+        content: "!";
+        display: inline-block;
+        background-color: rgb(250,168,50);
+        font-size: 16px;
+        width: 18px;
+        height: 18px;
+        line-height: 18px;
+        color: white;
+        border-radius: 2px;
+        text-align: center;
+        margin-right: 5px;
+        margin-bottom: 5px;
+        vertical-align: middle;
+    }
+    
+    .error span{
+        display: inline-block;
+        vertical-align: top;
+        line-height: 18px;
+    }
+
+    </style>
+</head>
+<body>
+    <div class="touch">
+    <form class="cn">
+        <input type="text" placeholder="姓名" name="firstName" required="" value="" class="invalid">
+        <input type="email" t="email" value="" placeholder="电子邮箱" name="account" required="" class="invalid">
+        <input type="tel" t="tel" value="" placeholder="电话" name="phoneNum" required="" pattern="^[\d+#\-*]+$" pm="无效的电话号码">
+        <textarea placeholder="你好，告诉我你的需求" name="question"></textarea>
+        <input type="submit" class="send" id="get-touch" value="确定">
+    </form>
+    </div>
+    <script src="http://s.xnimg.cn/ajax/zepto/zepto-1.1.0.all.min.js"></script>
+    <script src="./checkValidity.js"></script>
+    <script>
+    !function(){
+        var checkAccountExist = false;
+        function submit(){
+            console.log("表单验证成功，准备提交");
+        }
+        newFormCheck($(".touch form")[0], checkAccountExist, submit);
+    }();
+
+    function checkAccountExist(failCallback, successCallback){
+        var input = this;
+        util.ajax("/register/hasUser", {account: this.value}, function(data){
+            if(data.isUser === true){
+                failCallback();
+            }
+            else{
+                successCallback();
+            }
+        });
+    }
+
+    function newFormCheck(form, checkAccountExist, submitHandler){
+        var checkRule = {}
+        if(checkAccountExist){
+            checkRule.account = {
+                check: checkAccountExist,
+                msg: "账号已存在，请登陆",
+                async: true
+            };
+        }
+        return new Form(form, {
+            errorMsgClass: "error",
+            errorInputClass: "invalid",
+            rule: checkRule,
+            lang: "cn",
+            disableBrowserMsg: !(navigator.language || navigator.userLanguage).match(/cn/i)
+        }, submitHandler);
+   }
+
+        
+    </script>
+</body>
+</html>
