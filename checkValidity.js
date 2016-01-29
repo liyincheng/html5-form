@@ -1,4 +1,4 @@
-/* 目前只支持text/password/url/email/number */
+/* 目前支持text/password/url/email/number几种类型的input */
 
 /* checkOpt
 {
@@ -76,7 +76,7 @@ Form.prototype.addCheckValidity = function(){
                 number : /^[0-9]+(\.[0-9]+)?$/i
             }
             // REQUIRED ATTRIBUTES
-            var type  = that.getAttribute('t'),
+            var type  = that.getAttribute('t') || that.getAttribute("type"),
                 required= (that.getAttribute('required') !== null),
                 pattern = that.getAttribute('pattern');            
     
@@ -85,15 +85,19 @@ Form.prototype.addCheckValidity = function(){
                 typeMismatch    : (that.value.length>0) && (type in m) && !that.value.match( m[type] ),
                 patternMismatch : pattern && (that.value.length>0) && !that.value.match( new RegExp('^'+pattern+'$') )
             };
+            var Form = that.form.Form;
             for(var x in that.validity){
                 if(x === "valid" && that.validity[x] === true) return true;
                 if(that.validity[x]){
                     that.validity.valid = false;
-                    if(x === "valueMissing"){
-                        that.validationMessage = this.form.Form.valueMissingMsg;
-                    }
-                    else{
-                        that.validationMessage = that.title ? that.title : Form.validationMessage[type];
+                    switch(x){
+                        case "valueMissing":
+                            that.validationMessage = Form.checkOpt.errorText.valueMissing;
+                            break;
+                        case "typeMismatch":
+                            that.validationMessage = Form.validationMessage[type];
+                        case "patternMismatch":
+                            that.validationMessage = this.getAttribute("pm") || "type mismatch";
                     }
                     $(that).trigger('invalid');
                     return false;
@@ -122,9 +126,8 @@ Form.prototype.addErrorMsg = function(input, msg){
     var $input = $(input);
     var errorMsgClass = this.checkOpt.errorMsgClass;
     $input.addClass("invalid");
-    /* 由于Zepto获取取的width包含padding值 这里使用dom的api得到style*/
     var inputStyle = input.currentStyle ? input.currentStyle : document.defaultView.getComputedStyle(input, null);
-    var width = parseInt(inputStyle['width'])/2 + parseInt(inputStyle["padding-left"]);
+    var width = $input.width()/2 + (inputStyle["box-sizing"] === "border-box" ? 0 : parseInt(inputStyle["padding-left"]));
     var style = "max-width:" + width*1.3 + "px;";
     var position = $input.position();
     style += "left:" + (width*0.67 + position.left - 10) + "px;";
@@ -164,8 +167,9 @@ Form.prototype.checkInputValidity = function(input){
         }
         else if(validity.typeMismatch && (input.validationMessage === "type mismatch" || input.form.Form.checkOpt.disableBrowserMsg)){
             var defaultMsg = input.form.Form.validationMessage;
-            if(defaultMsg[input.type]){
-                return defaultMsg[input.type];
+            var type  = input.getAttribute('t') || input.getAttribute("type");
+            if(defaultMsg[type]){
+                return defaultMsg[type];
             }
         }
         else{
@@ -175,7 +179,7 @@ Form.prototype.checkInputValidity = function(input){
     return this.customValidity(input);
 }
 
-Form.prototype.checkValidity = function(){
+Form.prototype.checkValidity = function(doesSubmit){
     var form = this.form;
     var Form = this;
     var $inputs = $(form).find("input");
@@ -191,19 +195,19 @@ Form.prototype.checkValidity = function(){
         var name = $inputs[i].name;
         if(rule && rule[name] && rule[name]["async"]){
             var autoFocus = true;
-            Form.checkAsync($inputs[i], autoFocus);
+            Form.checkAsync($inputs[i], autoFocus, doesSubmit);
         } else {
             $inputs[i].hasCheck = true;
         }
     }
     var $submit = $(form).find("input[type=submit]");
-    if($submit.length){
+    if($submit.length && doesSubmit){
         Form.tryCallSubmit($submit[0]);
     }
     return true;
 }
 
-Form.prototype.checkAsync = function(input, autoFocus){
+Form.prototype.checkAsync = function(input, autoFocus, doesSubmit){
     name = input.name;
     var rule = input.form.Form.checkOpt.rule;
     rule[name]["check"].call(input, function(){
@@ -217,7 +221,9 @@ Form.prototype.checkAsync = function(input, autoFocus){
         }
     }, function(){
         input.hasCheck = true;
-        input.form.Form.tryCallSubmit(input);
+        if(doesSubmit){
+            input.form.Form.tryCallSubmit(input);
+        }
     });
 };
 
@@ -261,14 +267,18 @@ Form.prototype.bindEvent = function(){
         if(rule && rule[name] && rule[name]["async"]){
             Form.checkAsync(this);    
         }  
+        else{
+            this.hasCheck = true;
+        }
     });
     $form.on("click", "input[type=submit]", function(event){
         event.preventDefault();
         var Form = this.form.Form;
         $(Form.editingInput).blur();
-            if(!Form.tryCallSubmit(this)){
-                Form.checkValidity();
-            }
+        if(!Form.tryCallSubmit(this)){
+            var doesSubmit = true;
+            Form.checkValidity(doesSubmit);
+        }
     });
     $form.on("focus", "input", function(){
         if(this.type !== "submit"){
