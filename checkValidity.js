@@ -1,4 +1,4 @@
-/* 目前支持text/password/url/email/number几种类型的input */
+/* 目前只支持text/password/url/email/number */
 
 /* checkOpt
 {
@@ -110,7 +110,7 @@ Form.prototype.addCheckValidity = function(){
     var form = document.createElement("form");
     if(!form.checkValidity){
         HTMLFormElement.prototype.checkValidity = function(){
-            var $inputs = $(this).find("input");
+            var $inputs = $(this).find("input, textarea");
             for(var i = 0; i < $inputs.length; i++){
                 if(!$inputs[i].checkValidity()){
                     $(this).trigger("invalid");
@@ -122,19 +122,20 @@ Form.prototype.addCheckValidity = function(){
     }
 };
 
-Form.prototype.addErrorMsg = function(input, msg){
+Form.prototype.addErrorMsg = function(input, msg, _maxWidth){
     var $input = $(input);
     var errorMsgClass = this.checkOpt.errorMsgClass;
     $input.addClass("invalid");
     var inputStyle = input.currentStyle ? input.currentStyle : document.defaultView.getComputedStyle(input, null);
-    var width = $input.width()/2 + (inputStyle["box-sizing"] === "border-box" ? 0 : parseInt(inputStyle["padding-left"]));
-    var style = "max-width:" + width*1.3 + "px;";
+    var width = $input.width()/2 + parseInt(inputStyle["paddingLeft"]);
+    var maxWidth = _maxWidth ? _maxWidth : width*1.33 - 10;
+    var style = "max-width:" + maxWidth + "px;";
     var position = $input.position();
-    style += "left:" + (width*0.67 + position.left - 10) + "px;";
-    var marginTop = parseInt(inputStyle["margin-top"]);
+    style += "left:" + (width*0.67 + position.left) + "px;";
+    var marginTop = parseInt(inputStyle["marginTop"]);
     marginTop = marginTop ? marginTop : 0;
     style += "top:" + (position.top + 10 + $input.height() + marginTop) + "px";
-    var errMsg = "<p class='" + errorMsgClass + "' style='" + style + "'><span style='max-width:" + (width*1.3 - 25) + "px;'>" + msg + "</span></p>";
+    var errMsg = "<p class='" + errorMsgClass + "' style='" + style + "'><span style='max-width:" + (maxWidth - 25) + "px;'>" + msg + "</span></p>";
     $(input.form).find("." + this.checkOpt.errorMsgClass).remove();
     $(errMsg).insertAfter(input);
     clearTimeout(this.removeMsgTimeId);
@@ -182,7 +183,7 @@ Form.prototype.checkInputValidity = function(input){
 Form.prototype.checkValidity = function(doesSubmit){
     var form = this.form;
     var Form = this;
-    var $inputs = $(form).find("input");
+    var $inputs = $(form).find("input, textarea");
     var rule = this.checkOpt.rule;
     for(var i = 0; i < $inputs.length; i++){
         if($inputs[i].hasCheck) continue;
@@ -237,7 +238,7 @@ Form.prototype.tryCallSubmit = function(input){
 };
 
 Form.prototype.checkOK = function(){
-    var $inputs = $(this.form).find("input");
+    var $inputs = $(this.form).find("input, textarea");
     for(var i = 0; i < $inputs.length; i++){
         if($inputs[i].type === "submit") continue;
         if(!$inputs[i].hasCheck) return false;
@@ -248,13 +249,13 @@ Form.prototype.checkOK = function(){
 Form.prototype.bindEvent = function(){
     //关闭掉浏览器的默认行为，如input变红，弹提示框
     var $form = $(this.form);
-    $form.on("invalid", "input", function(event){
+    $form.on("invalid", "input, textarea", function(event){
         event.preventDefault();
     });
     $form.on("invalid", "form", function(event){
         event.preventDefault();
     });
-    $form.on("blur", "input", function(event){
+    $form.on("blur", "input, textarea", function(event){
         event.preventDefault();
         var Form = this.form.Form;
         var msg = Form.checkInputValidity(this);
@@ -280,7 +281,7 @@ Form.prototype.bindEvent = function(){
             Form.checkValidity(doesSubmit);
         }
     });
-    $form.on("focus", "input", function(){
+    $form.on("focus", "input, textarea", function(){
         if(this.type !== "submit"){
             this.hasCheck = false;
         } 
