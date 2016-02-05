@@ -104,7 +104,8 @@ Form.prototype.addCheckValidity = function(){
                 }
             }
             return that.validity.valid = true;
-        }    
+        };
+        HTMLTextAreaElement.prototype.checkValidity = HTMLInputElement.prototype.checkValidity;
     }
     //form
     var form = document.createElement("form");
@@ -127,11 +128,13 @@ Form.prototype.addErrorMsg = function(input, msg, _maxWidth){
     var errorMsgClass = this.checkOpt.errorMsgClass;
     $input.addClass("invalid");
     var inputStyle = input.currentStyle ? input.currentStyle : document.defaultView.getComputedStyle(input, null);
-    var width = $input.width()/2 + parseInt(inputStyle["paddingLeft"]);
-    var maxWidth = _maxWidth ? _maxWidth : width*1.33 - 10;
-    var style = "max-width:" + maxWidth + "px;";
+    var halfWidth = $input.width()/2 + parseInt(inputStyle["paddingLeft"]);
+    var maxWidth = _maxWidth ? _maxWidth : (halfWidth * 1.33 + 10 - 20);
+    var style = "max-width:" + maxWidth + "px;box-sizing:content-box;";
     var position = $input.position();
-    style += "left:" + (width*0.67 + position.left) + "px;";
+    var marginLeft = parseInt(inputStyle["marginLeft"]);
+    marginLeft = marginLeft ? marginLeft : 0;
+    style += "left:" + (halfWidth*0.67 + position.left + marginLeft - 10) + "px;";
     var marginTop = parseInt(inputStyle["marginTop"]);
     marginTop = marginTop ? marginTop : 0;
     style += "top:" + (position.top + 10 + $input.height() + marginTop) + "px";
@@ -175,6 +178,12 @@ Form.prototype.checkInputValidity = function(input){
         }
         else{
             return input.validationMessage;
+        }
+    }
+    else if(input.type === "textarea"){
+        var pattern = input.getAttribute("pattern");
+        if(pattern && (input.value.length>0) && !input.value.match( new RegExp('^'+pattern+'$') )){
+            return input.getAttribute("pm");
         }
     }
     return this.customValidity(input);
