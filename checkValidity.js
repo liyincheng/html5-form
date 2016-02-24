@@ -137,7 +137,9 @@ Form.prototype.addErrorMsg = function(input, msg, _maxWidth){
     style += "left:" + (halfWidth*0.67 + position.left + marginLeft - 10) + "px;";
     var marginTop = parseInt(inputStyle["marginTop"]);
     marginTop = marginTop ? marginTop : 0;
-    style += "top:" + (position.top + 10 + $input.height() + marginTop) + "px";
+    var paddingTop = parseInt(inputStyle["paddingTop"]);
+    paddingTop = paddingTop ? paddingTop : 0;
+    style += "top:" + (position.top + 0 + $input.height() + marginTop + paddingTop * 2) + "px";
     var errMsg = "<p class='" + errorMsgClass + "' style='" + style + "'><span style='max-width:" + (maxWidth - 25) + "px;'>" + msg + "</span></p>";
     $(input.form).find("." + this.checkOpt.errorMsgClass).remove();
     $(errMsg).insertAfter(input);
